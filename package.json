@@ -28,6 +28,8 @@
     "webpack-merge": "^5.8.0"
   },
   "devDependencies": {
+    "eslint": "^8.2.0",
+    "eslint-plugin-import": "^2.25.2",
     "lil-gui": "^0.16.0"
   }
 }
