@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GUIFolders } from '../libs/gui-helper/gui-helper-config';
 import GUIHelper from '../libs/gui-helper/gui-helper';
+import TWEEN from '@tweenjs/tween.js';
 
 export default class GameScene extends THREE.Group {
   constructor(camera) {
@@ -18,6 +19,7 @@ export default class GameScene extends THREE.Group {
 
   _init() {
     this._initSphere();
+    this._tweenExample();
   }
 
   _initSphere() {
@@ -32,5 +34,14 @@ export default class GameScene extends THREE.Group {
     guiFolder.add(scale, 'sphereScale', 0, 10)
       .name('Box scale')
       .onChange((value) => sphere.scale.set(value, value, value));
+  }
+
+  _tweenExample() {
+    new TWEEN.Tween(this._sphere.position)
+      .to({ y: 2 }, 1000)
+      .easing(TWEEN.Easing.Sinusoidal.InOut)
+      .repeat(5)
+      .yoyo(true)
+      .start();
   }
 }

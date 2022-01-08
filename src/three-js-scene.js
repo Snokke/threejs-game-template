@@ -5,6 +5,7 @@ import GUIHelper from './libs/gui-helper/gui-helper';
 import GameScene from './scene/game-scene';
 import Stats from "stats.js";
 import { GUIFolders, GUIFoldersVisibility } from './libs/gui-helper/gui-helper-config';
+import TWEEN from '@tweenjs/tween.js';
 
 const canvas = document.querySelector('canvas.webgl');
 
@@ -227,6 +228,7 @@ export default class ThreeJSScene {
       const deltaTime = elapsedTime - lastElapsedTime;
       lastElapsedTime = elapsedTime;
 
+      TWEEN.update();
       this._controls.update();
       this._gameScene.update(deltaTime);
       this._renderer.render(this._scene, this._camera);
