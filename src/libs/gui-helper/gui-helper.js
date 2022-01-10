@@ -9,6 +9,7 @@ export default class GUIHelper {
     }
 
     this.gui = new GUI();
+    this.gui.hide();
 
     return this;
   }

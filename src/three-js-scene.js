@@ -6,6 +6,7 @@ import GameScene from './scene/game-scene';
 import Stats from "stats.js";
 import { GUIFolders, GUIFoldersVisibility } from './libs/gui-helper/gui-helper-config';
 import TWEEN from '@tweenjs/tween.js';
+import LoadingOverlay from './loading-overlay';
 
 const canvas = document.querySelector('canvas.webgl');
 
@@ -20,10 +21,25 @@ export default class ThreeJSScene {
     this._directionalLight = null;
     this._directionalLightHelper = null;
     this._axesHelper = null;
+    this._loadingOverlay = null;
     this._stats = null;
     this._windowSizes = {};
 
     this._init();
+  }
+
+  createGameScene() {
+    const gameScene = this._gameScene = new GameScene(this._camera);
+    this._scene.add(gameScene);
+  }
+
+  hideLoadingOverlay() {
+    this._loadingOverlay.hide();
+
+    this._controls.enabled = true;
+    this._stats.dom.style.visibility = 'visible';
+    const gui = GUIHelper.getInstance().gui;
+    gui.show();
   }
 
   _init() {
@@ -34,8 +50,8 @@ export default class ThreeJSScene {
     this._initRenderer();
     this._initCamera();
     this._initLights();
+    this._initLoadingOverlay();
     this._initOnResize();
-    this._initGameScene();
 
     this._initAxesHelper();
     this._setBackgroundColor();
@@ -62,6 +78,8 @@ export default class ThreeJSScene {
     const stats = this._stats = new Stats();
     stats.showPanel(0);
     document.body.appendChild(stats.dom);
+
+    this._stats.dom.style.visibility = 'hidden';
   }
 
   _initScene() {
@@ -81,6 +99,9 @@ export default class ThreeJSScene {
 
     renderer.setSize(this._windowSizes.width, this._windowSizes.height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.physicallyCorrectLights = true;
   }
 
   _initCamera() {
@@ -92,6 +113,7 @@ export default class ThreeJSScene {
 
     const controls = this._controls = new OrbitControls(this._camera, canvas);
     controls.enableDamping = true;
+    controls.enabled = false;
   }
 
   _initLights() {
@@ -108,6 +130,11 @@ export default class ThreeJSScene {
     this._scene.add(directionalLightHelper);
   }
 
+  _initLoadingOverlay() {
+    const loadingOverlay = this._loadingOverlay = new LoadingOverlay();
+    this._scene.add(loadingOverlay);
+  }
+
   _initOnResize() {
     window.addEventListener('resize', () => {
       this._windowSizes.width = window.innerWidth;
@@ -119,11 +146,6 @@ export default class ThreeJSScene {
       this._renderer.setSize(this._windowSizes.width, this._windowSizes.height);
       this._renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     });
-  }
-
-  _initGameScene() {
-    const gameScene = this._gameScene = new GameScene(this._camera);
-    this._scene.add(gameScene);
   }
 
   _initAxesHelper() {
@@ -190,7 +212,7 @@ export default class ThreeJSScene {
     guiAmbientFolder.addColor(this._ambientLight, 'color')
       .name('Color');
 
-    guiAmbientFolder.add(this._ambientLight, 'intensity', 0, 1)
+    guiAmbientFolder.add(this._ambientLight, 'intensity', 0, 10)
       .name('Intensity');
 
     const directionalFolder = guiLightsFolder.addFolder('Directional');
@@ -201,7 +223,7 @@ export default class ThreeJSScene {
     directionalFolder.addColor(this._directionalLight, 'color')
       .name('Color');
 
-    directionalFolder.add(this._directionalLight, 'intensity', 0, 1)
+    directionalFolder.add(this._directionalLight, 'intensity', 0, 10)
       .name('Intensity');
 
     directionalFolder.add(this._directionalLight.position, 'x', -10, 10)
@@ -230,7 +252,11 @@ export default class ThreeJSScene {
 
       TWEEN.update();
       this._controls.update();
-      this._gameScene.update(deltaTime);
+
+      if (this._gameScene) {
+        this._gameScene.update(deltaTime);
+      }
+
       this._renderer.render(this._scene, this._camera);
 
       this._stats.end();

@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { GUIFolders } from '../libs/gui-helper/gui-helper-config';
 import GUIHelper from '../libs/gui-helper/gui-helper';
 import TWEEN from '@tweenjs/tween.js';
+import Loader from '../loader';
+import Utils from '../utils/utils';
 
 export default class GameScene extends THREE.Group {
   constructor(camera) {
@@ -14,17 +16,23 @@ export default class GameScene extends THREE.Group {
   }
 
   update(dt) {
-    this._sphere.rotation.y += dt;
+    // this._sphere.rotation.y += dt;
   }
 
   _init() {
-    this._initSphere();
-    this._tweenExample();
+    // this._initSphere();
+    // this._tweenExample();
+    this._initDuck();
   }
 
   _initSphere() {
+    const texture = Loader.assets['wooden_crate_base_color'];
+
     const geometry = new THREE.BoxBufferGeometry(1);
-    const material = new THREE.MeshLambertMaterial({ color: 0xaa0000 });
+    const material = new THREE.MeshLambertMaterial({
+      map: texture,
+      // color: 0xaa0000,
+    });
 
     const sphere = this._sphere = new THREE.Mesh(geometry, material);
     this.add(sphere);
@@ -43,5 +51,12 @@ export default class GameScene extends THREE.Group {
       .repeat(5)
       .yoyo(true)
       .start();
+  }
+
+  _initDuck() {
+    const helmet = Utils.createObject('FlightHelmet/FlightHelmet');
+    this.add(helmet);
+
+    helmet.scale.set(3, 3, 3);
   }
 }
