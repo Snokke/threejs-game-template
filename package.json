@@ -10,6 +10,8 @@
     "@babel/preset-env": "^7.14.7",
     "@tweenjs/tween.js": "^18.6.4",
     "babel-loader": "^8.2.2",
+    "cannon-es": "^0.18.0",
+    "cannon-es-debugger": "^1.0.0",
     "clean-webpack-plugin": "^3.0.0",
     "copy-webpack-plugin": "^9.0.1",
     "css-loader": "^5.2.6",

@@ -1,98 +1,119 @@
 import * as THREE from 'three';
-import { GUIFolders } from '../libs/gui-helper/gui-helper-config';
-import GUIHelper from '../libs/gui-helper/gui-helper';
-import TWEEN from '@tweenjs/tween.js';
+import * as CANNON from 'cannon-es';
 import Loader from '../loader';
-import Utils from '../utils/utils';
+import Physics from '../physics';
 
 export default class GameScene extends THREE.Group {
   constructor(camera) {
     super();
 
     this._camera = camera;
-    this._sphere = null;
-    this._helmet = null;
-    this._envMapIntensity = 1;
 
     this._init();
   }
 
   update(dt) {
-    // this._sphere.rotation.y += dt;
+
   }
 
   _init() {
-    // this._initSphere();
-    // this._tweenExample();
-    this._initDuck();
+    this._initFloor();
+    this._initSphere();
+    this._initBox();
+    this._initBox2();
+  }
+
+  _initFloor() {
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(10, 10),
+      new THREE.MeshStandardMaterial({
+          color: '#777777',
+          metalness: 0.3,
+          roughness: 0.4,
+          envMap: Loader.environmentMap,
+          envMapIntensity: 1,
+      })
+    );
+    floor.receiveShadow = true;
+    floor.rotation.x = -Math.PI * 0.5;
+    this.add(floor);
+
+    const body = new CANNON.Body({
+      mass: 0,
+      shape: new CANNON.Plane()
+    });
+
+    body.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+
+    Physics.addBody(body, floor);
   }
 
   _initSphere() {
-    const texture = Loader.assets['wooden_crate_base_color'];
-
-    const geometry = new THREE.BoxBufferGeometry(1);
-    const material = new THREE.MeshLambertMaterial({
-      map: texture,
-      // color: 0xaa0000,
+    const sphereGeometry = new THREE.SphereGeometry(0.5, 20, 20);
+    const sphereMaterial = new THREE.MeshStandardMaterial({
+      metalness: 0.3,
+      roughness: 0.4,
+      envMap: Loader.environmentMap,
+      envMapIntensity: 1,
     });
 
-    const sphere = this._sphere = new THREE.Mesh(geometry, material);
-    this.add(sphere);
+    const mesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    mesh.castShadow = true;
+    this.add(mesh);
 
-    const guiFolder = GUIHelper.getInstance().getFolder(GUIFolders.Custom);
-    const scale = { sphereScale: 1 };
-    guiFolder.add(scale, 'sphereScale', 0, 10)
-      .name('Box scale')
-      .onChange((value) => sphere.scale.set(value, value, value));
-  }
-
-  _tweenExample() {
-    new TWEEN.Tween(this._sphere.position)
-      .to({ y: 2 }, 1000)
-      .easing(TWEEN.Easing.Sinusoidal.InOut)
-      .repeat(5)
-      .yoyo(true)
-      .start();
-  }
-
-  _initDuck() {
-    const helmet = this._helmet = Utils.createObject('FlightHelmet/FlightHelmet');
-    this.add(helmet);
-
-    helmet.scale.set(3, 3, 3);
-    helmet.position.y = -1.5;
-    helmet.rotation.y = Math.PI * 0.75;
-
-    const environmentMapIntensity = { value: 1 };
-    const guiHelper = GUIHelper.getInstance();
-    const guiTexturesFolder = guiHelper.getFolder(GUIFolders.Textures);
-    guiTexturesFolder.add(environmentMapIntensity, 'value', 0, 10)
-      .name('envMap Intensity')
-      .onChange((value) => {
-        this._envMapIntensity = value;
-        this._updateMaterials();
-      });
-
-    this._updateMaterials();
-
-    const guiRendererFolder = guiHelper.getFolder(GUIFolders.Renderer);
-
-    guiRendererFolder.controllers.forEach((controller) => {
-      if (controller._name === 'Tone mapping') {
-        controller.onChange(() => {
-          this._updateMaterials();
-        });
-      }
+    const sphereBody = new CANNON.Body({
+      mass: 1,
+      shape: new CANNON.Sphere(0.5),
     });
+
+    Physics.addBody(sphereBody, mesh);
+
+    sphereBody.position.set(0, 5, 0);
   }
 
-  _updateMaterials() {
-    this._helmet.traverse((child) => {
-      if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
-        child.material.envMapIntensity = this._envMapIntensity;
-        child.castShadow = true;
-        child.receiveShadow = true;
-      }
-    })
+  _initBox() {
+    const boxGeometry = new THREE.BoxGeometry(1);
+    const boxMaterial = new THREE.MeshStandardMaterial({
+      metalness: 0.3,
+      roughness: 0.4,
+      envMap: Loader.environmentMap,
+      envMapIntensity: 1,
+    });
+
+    const mesh = new THREE.Mesh(boxGeometry, boxMaterial);
+    mesh.castShadow = true;
+    this.add(mesh);
+
+    const boxBody = new CANNON.Body({
+      mass: 1,
+      shape: new CANNON.Box(new CANNON.Vec3(1 * 0.5, 1 * 0.5, 1 * 0.5)),
+    });
+
+    Physics.addBody(boxBody, mesh);
+
+    boxBody.position.set(0, 1, 0.5);
+  }
+
+  _initBox2() {
+    const boxGeometry = new THREE.BoxGeometry(1);
+    const boxMaterial = new THREE.MeshStandardMaterial({
+      metalness: 0.3,
+      roughness: 0.4,
+      envMap: Loader.environmentMap,
+      envMapIntensity: 1,
+    });
+
+    const mesh = new THREE.Mesh(boxGeometry, boxMaterial);
+    mesh.castShadow = true;
+    this.add(mesh);
+
+    const boxBody = new CANNON.Body({
+      mass: 1,
+      shape: new CANNON.Box(new CANNON.Vec3(1 * 0.5, 1 * 0.5, 1 * 0.5)),
+    });
+
+    Physics.addBody(boxBody, mesh);
+
+    boxBody.position.set(0, 3, 0);
   }
 }

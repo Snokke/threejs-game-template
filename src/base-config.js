@@ -9,14 +9,17 @@ const BASE_CONFIG = {
   lights: {
     ambient: {
       color: 0xFFEFE4,
-      intensity: 3,
+      intensity: 0.8,
     },
     directional: {
       color: 0xFFEFE4,
-      intensity: 3,
+      intensity: 0.8,
       position: { x: 0.5, y: 2, z: -3 },
     },
   },
+  physics: {
+    enableCannonDebugger: true,
+  }
 };
 
 export default BASE_CONFIG;

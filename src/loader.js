@@ -2,12 +2,9 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 const textures = [
-  'wooden_crate_base_color.png',
 ];
 
 const models = [
-  'duck.glb',
-  'FlightHelmet/FlightHelmet.gltf',
 ];
 
 const loadingBarElement = document.querySelector('.loading-bar');
@@ -19,10 +16,16 @@ export default class Loader {
     Loader.assets = {};
 
     this._manager = new THREE.LoadingManager(this._onLoaded, this._onProgress);
+  }
 
+  start() {
     this._loadTextures();
     this._loadModels();
     this._loadEnvironmentMap();
+
+    if (textures.length === 0 && models.length === 0 && !Loader.environmentMap) {
+      this._onLoaded();
+    }
   }
 
   _onLoaded() {
@@ -74,12 +77,12 @@ export default class Loader {
   _loadEnvironmentMap() {
     const cubeTextureLoader = new THREE.CubeTextureLoader(this._manager);
     const environmentMap = cubeTextureLoader.load([
-      '/textures/environment_maps/px.jpg',
-      '/textures/environment_maps/nx.jpg',
-      '/textures/environment_maps/py.jpg',
-      '/textures/environment_maps/ny.jpg',
-      '/textures/environment_maps/pz.jpg',
-      '/textures/environment_maps/nz.jpg',
+      '/textures/environment_maps/px.png',
+      '/textures/environment_maps/nx.png',
+      '/textures/environment_maps/py.png',
+      '/textures/environment_maps/ny.png',
+      '/textures/environment_maps/pz.png',
+      '/textures/environment_maps/nz.png',
     ]);
 
     environmentMap.encoding = THREE.sRGBEncoding;

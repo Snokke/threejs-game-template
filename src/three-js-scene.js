@@ -7,7 +7,7 @@ import Stats from "stats.js";
 import { GUIFolders, GUIFoldersVisibility } from './libs/gui-helper/gui-helper-config';
 import TWEEN from '@tweenjs/tween.js';
 import LoadingOverlay from './loading-overlay';
-import Loader from './loader';
+import Physics from './physics';
 
 const canvas = document.querySelector('canvas.webgl');
 
@@ -24,7 +24,9 @@ export default class ThreeJSScene {
     this._axesHelper = null;
     this._loadingOverlay = null;
     this._stats = null;
+    this._physics = null;
     this._windowSizes = {};
+    this._isAssetsLoaded = false;
 
     this._init();
   }
@@ -34,23 +36,21 @@ export default class ThreeJSScene {
     this._scene.add(gameScene);
   }
 
-  hideLoadingOverlay() {
-    this._loadingOverlay.hide();
-  }
+  afterAssetsLoaded() {
+    this._isAssetsLoaded = true;
+    this._controls.enabled = true;
 
-  showUIControls() {
+    this._loadingOverlay.hide();
+
     this._stats.dom.style.visibility = 'visible';
     const gui = GUIHelper.getInstance().gui;
     gui.show();
-  }
 
-  enableOrbitControls() {
-    this._controls.enabled = true;
-  }
-
-  setEnvironmentMap() {
-    this._scene.background = Loader.environmentMap;
-    this._scene.environment = Loader.environmentMap;
+    gui.controllers.forEach((controller) => {
+      if (controller._name === 'Orbit controls') {
+        controller.setValue(true);
+      }
+    });
   }
 
   _init() {
@@ -61,27 +61,19 @@ export default class ThreeJSScene {
     this._initRenderer();
     this._initCamera();
     this._initLights();
+    this._initPhysics();
     this._initLoadingOverlay();
     this._initOnResize();
 
     this._initAxesHelper();
+    this._setupBackgroundColor();
     this._setupGUI();
 
     this._initUpdate();
   }
 
   _initGUI() {
-    const { gui } = new GUIHelper();
-
-    const folderKeys = Object.keys(GUIFolders);
-    folderKeys.forEach((folderName) => {
-      const folder = gui.addFolder(folderName);
-      folder.close();
-
-      if (!GUIFoldersVisibility[folderName]) {
-        folder.hide();
-      }
-    });
+    new GUIHelper();
   }
 
   _initFPSMeter() {
@@ -123,7 +115,7 @@ export default class ThreeJSScene {
     const camera = this._camera = new THREE.PerspectiveCamera(BASE_CONFIG.camera.fov, this._windowSizes.width / this._windowSizes.height, BASE_CONFIG.camera.near, BASE_CONFIG.camera.far);
     this._scene.add(camera);
 
-    camera.position.set(2, 1, 2);
+    camera.position.set(13, 6, 13);
     camera.lookAt(0, 0, 0);
 
     const controls = this._controls = new OrbitControls(this._camera, canvas);
@@ -144,13 +136,13 @@ export default class ThreeJSScene {
     directionalLight.castShadow = true;
     directionalLight.shadow.camera.far = 15;
     directionalLight.shadow.mapSize.set(1024, 1024);
-    directionalLight.shadow.normalBias = 0.05;
-
-    // const shadowHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
-    // this._scene.add(shadowHelper);
 
     const directionalLightHelper = this._directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 1);
     this._scene.add(directionalLightHelper);
+  }
+
+  _initPhysics() {
+    this._physics = new Physics(this._scene);
   }
 
   _initLoadingOverlay() {
@@ -176,10 +168,15 @@ export default class ThreeJSScene {
     this._scene.add(axesHelper);
   }
 
+  _setupBackgroundColor() {
+    this._scene.background = new THREE.Color(BASE_CONFIG.backgroundColor);
+  }
+
   _setupGUI() {
+    this._setupMainGUI();
+    this._setupFolders();
     this._setupHelpersGUI();
     this._setupLightsGUI();
-    this._setupRendererGUI();
   }
 
   _setupHelpersGUI() {
@@ -198,9 +195,7 @@ export default class ThreeJSScene {
         });
       });
 
-    guiHelpersFolder.add(this._controls, 'enabled')
-      .name('Orbit controls')
-      .onChange(() => this._controls.reset());
+    this._physics.initDebuggerFuiHelper();
 
     guiHelpersFolder.add(this._directionalLightHelper, 'visible')
       .name('Directional light');
@@ -259,20 +254,26 @@ export default class ThreeJSScene {
       .onChange(() => this._directionalLightHelper.update());
   }
 
-  _setupRendererGUI() {
-    const guiHelper = GUIHelper.getInstance();
-    const guiRendererFolder = guiHelper.getFolder(GUIFolders.Renderer);
-    guiRendererFolder.add(this._renderer, 'toneMapping', {
-      No: THREE.NoToneMapping,
-      Linear: THREE.LinearToneMapping,
-      Reinhard: THREE.ReinhardToneMapping,
-      Cineon: THREE.CineonToneMapping,
-      ACESFilmic: THREE.ACESFilmicToneMapping
-    })
-      .name('Tone mapping');
+  _setupMainGUI() {
+    const { gui } = GUIHelper.getInstance();
 
-    guiRendererFolder.add(this._renderer, 'toneMappingExposure', 0, 5)
-      .name('Tone mapping exp');
+    gui.add(this._controls, 'enabled')
+      .name('Orbit controls')
+      .onChange(() => this._controls.reset());
+  }
+
+  _setupFolders() {
+    const { gui } = GUIHelper.getInstance();
+
+    const folderKeys = Object.keys(GUIFolders);
+    folderKeys.forEach((folderName) => {
+      const folder = gui.addFolder(folderName);
+      folder.close();
+
+      if (!GUIFoldersVisibility[folderName]) {
+        folder.hide();
+      }
+    });
   }
 
   _initUpdate() {
@@ -286,14 +287,17 @@ export default class ThreeJSScene {
       const deltaTime = elapsedTime - lastElapsedTime;
       lastElapsedTime = elapsedTime;
 
-      TWEEN.update();
-      this._controls.update();
+      if (this._isAssetsLoaded) {
+        TWEEN.update();
+        this._physics.update(deltaTime);
+        this._controls.update();
 
-      if (this._gameScene) {
-        this._gameScene.update(deltaTime);
+        if (this._gameScene) {
+          this._gameScene.update(deltaTime);
+        }
+
+        this._renderer.render(this._scene, this._camera);
       }
-
-      this._renderer.render(this._scene, this._camera);
 
       this._stats.end();
       window.requestAnimationFrame(update);
