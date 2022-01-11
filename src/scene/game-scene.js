@@ -11,6 +11,8 @@ export default class GameScene extends THREE.Group {
 
     this._camera = camera;
     this._sphere = null;
+    this._helmet = null;
+    this._envMapIntensity = 1;
 
     this._init();
   }
@@ -54,9 +56,43 @@ export default class GameScene extends THREE.Group {
   }
 
   _initDuck() {
-    const helmet = Utils.createObject('FlightHelmet/FlightHelmet');
+    const helmet = this._helmet = Utils.createObject('FlightHelmet/FlightHelmet');
     this.add(helmet);
 
     helmet.scale.set(3, 3, 3);
+    helmet.position.y = -1.5;
+    helmet.rotation.y = Math.PI * 0.75;
+
+    const environmentMapIntensity = { value: 1 };
+    const guiHelper = GUIHelper.getInstance();
+    const guiTexturesFolder = guiHelper.getFolder(GUIFolders.Textures);
+    guiTexturesFolder.add(environmentMapIntensity, 'value', 0, 10)
+      .name('envMap Intensity')
+      .onChange((value) => {
+        this._envMapIntensity = value;
+        this._updateMaterials();
+      });
+
+    this._updateMaterials();
+
+    const guiRendererFolder = guiHelper.getFolder(GUIFolders.Renderer);
+
+    guiRendererFolder.controllers.forEach((controller) => {
+      if (controller._name === 'Tone mapping') {
+        controller.onChange(() => {
+          this._updateMaterials();
+        });
+      }
+    });
+  }
+
+  _updateMaterials() {
+    this._helmet.traverse((child) => {
+      if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
+        child.material.envMapIntensity = this._envMapIntensity;
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    })
   }
 }

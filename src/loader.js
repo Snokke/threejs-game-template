@@ -22,6 +22,7 @@ export default class Loader {
 
     this._loadTextures();
     this._loadModels();
+    this._loadEnvironmentMap();
   }
 
   _onLoaded() {
@@ -68,6 +69,21 @@ export default class Loader {
       const modelName = modelFilename.replace(/\.[^/.]+$/, "");
       gltfLoader.load(modelFullPath, (gltfModel) => this._onAssetLoad(gltfModel, modelName));
     });
+  }
+
+  _loadEnvironmentMap() {
+    const cubeTextureLoader = new THREE.CubeTextureLoader(this._manager);
+    const environmentMap = cubeTextureLoader.load([
+      '/textures/environment_maps/px.jpg',
+      '/textures/environment_maps/nx.jpg',
+      '/textures/environment_maps/py.jpg',
+      '/textures/environment_maps/ny.jpg',
+      '/textures/environment_maps/pz.jpg',
+      '/textures/environment_maps/nz.jpg',
+    ]);
+
+    environmentMap.encoding = THREE.sRGBEncoding;
+    Loader.environmentMap = environmentMap;
   }
 
   _onAssetLoad(asset, name) {

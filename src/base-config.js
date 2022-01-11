@@ -9,12 +9,12 @@ const BASE_CONFIG = {
   lights: {
     ambient: {
       color: 0xFFEFE4,
-      intensity: 0.6,
+      intensity: 3,
     },
     directional: {
       color: 0xFFEFE4,
-      intensity: 0.6,
-      position: { x: 5, y: 5, z: 5 },
+      intensity: 3,
+      position: { x: 0.5, y: 2, z: -3 },
     },
   },
 };

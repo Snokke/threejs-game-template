@@ -7,6 +7,7 @@ import Stats from "stats.js";
 import { GUIFolders, GUIFoldersVisibility } from './libs/gui-helper/gui-helper-config';
 import TWEEN from '@tweenjs/tween.js';
 import LoadingOverlay from './loading-overlay';
+import Loader from './loader';
 
 const canvas = document.querySelector('canvas.webgl');
 
@@ -35,11 +36,21 @@ export default class ThreeJSScene {
 
   hideLoadingOverlay() {
     this._loadingOverlay.hide();
+  }
 
-    this._controls.enabled = true;
+  showUIControls() {
     this._stats.dom.style.visibility = 'visible';
     const gui = GUIHelper.getInstance().gui;
     gui.show();
+  }
+
+  enableOrbitControls() {
+    this._controls.enabled = true;
+  }
+
+  setEnvironmentMap() {
+    this._scene.background = Loader.environmentMap;
+    this._scene.environment = Loader.environmentMap;
   }
 
   _init() {
@@ -54,7 +65,6 @@ export default class ThreeJSScene {
     this._initOnResize();
 
     this._initAxesHelper();
-    this._setBackgroundColor();
     this._setupGUI();
 
     this._initUpdate();
@@ -102,13 +112,18 @@ export default class ThreeJSScene {
 
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.physicallyCorrectLights = true;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1;
+
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   }
 
   _initCamera() {
     const camera = this._camera = new THREE.PerspectiveCamera(BASE_CONFIG.camera.fov, this._windowSizes.width / this._windowSizes.height, BASE_CONFIG.camera.near, BASE_CONFIG.camera.far);
     this._scene.add(camera);
 
-    camera.position.set(0, 3, 5);
+    camera.position.set(2, 1, 2);
     camera.lookAt(0, 0, 0);
 
     const controls = this._controls = new OrbitControls(this._camera, canvas);
@@ -125,6 +140,14 @@ export default class ThreeJSScene {
     const directionalLight = this._directionalLight = new THREE.DirectionalLight(directionalLightConfig.color, directionalLightConfig.intensity);
     directionalLight.position.set(directionalLightConfig.position.x, directionalLightConfig.position.y, directionalLightConfig.position.z);
     this._scene.add(directionalLight);
+
+    directionalLight.castShadow = true;
+    directionalLight.shadow.camera.far = 15;
+    directionalLight.shadow.mapSize.set(1024, 1024);
+    directionalLight.shadow.normalBias = 0.05;
+
+    // const shadowHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
+    // this._scene.add(shadowHelper);
 
     const directionalLightHelper = this._directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 1);
     this._scene.add(directionalLightHelper);
@@ -153,13 +176,10 @@ export default class ThreeJSScene {
     this._scene.add(axesHelper);
   }
 
-  _setBackgroundColor() {
-    this._scene.background = new THREE.Color(BASE_CONFIG.backgroundColor);
-  }
-
   _setupGUI() {
     this._setupHelpersGUI();
     this._setupLightsGUI();
+    this._setupRendererGUI();
   }
 
   _setupHelpersGUI() {
@@ -237,6 +257,22 @@ export default class ThreeJSScene {
     directionalFolder.add(this._directionalLight.position, 'z', -10, 10)
       .name('z')
       .onChange(() => this._directionalLightHelper.update());
+  }
+
+  _setupRendererGUI() {
+    const guiHelper = GUIHelper.getInstance();
+    const guiRendererFolder = guiHelper.getFolder(GUIFolders.Renderer);
+    guiRendererFolder.add(this._renderer, 'toneMapping', {
+      No: THREE.NoToneMapping,
+      Linear: THREE.LinearToneMapping,
+      Reinhard: THREE.ReinhardToneMapping,
+      Cineon: THREE.CineonToneMapping,
+      ACESFilmic: THREE.ACESFilmicToneMapping
+    })
+      .name('Tone mapping');
+
+    guiRendererFolder.add(this._renderer, 'toneMappingExposure', 0, 5)
+      .name('Tone mapping exp');
   }
 
   _initUpdate() {
