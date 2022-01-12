@@ -2,9 +2,11 @@
   "name": "threejs-game-template",
   "version": "0.1.0",
   "description": "Simple template for games with Three.js and Cannon.js.",
-  "repository": "https://github.com/Snokke/threejs_game_template",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Snokke/threejs_game_template.git"
+  },
   "license": "UNLICENSED",
-  "author": "Andrei Babintsev",
   "scripts": {
     "build": "webpack --config ./bundler/webpack.prod.js",
     "start": "webpack serve --config ./bundler/webpack.dev.js"
@@ -14,6 +16,7 @@
     "@babel/preset-env": "^7.14.7",
     "@tweenjs/tween.js": "^18.6.4",
     "babel-loader": "^8.2.2",
+    "black-engine": "^0.5.15",
     "cannon-es": "^0.18.0",
     "cannon-es-debugger": "^1.0.0",
     "clean-webpack-plugin": "^3.0.0",

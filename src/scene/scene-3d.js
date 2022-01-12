@@ -3,7 +3,7 @@ import * as CANNON from 'cannon-es';
 import Loader from '../core/loader';
 import Physics from '../core/physics';
 
-export default class Scene extends THREE.Group {
+export default class Scene3D extends THREE.Group {
   constructor(camera) {
     super();
 

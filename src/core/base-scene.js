@@ -2,14 +2,14 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/orbitcontrols';
 import BASE_CONFIG from './base-config';
 import GUIHelper from '../helpers/gui-helper/gui-helper';
-import Scene from '../scene/scene';
+import MainScene from '../scene/main-scene';
 import Stats from "stats.js";
 import TWEEN from '@tweenjs/tween.js';
 import LoadingOverlay from './loading-overlay';
 import Physics from './physics';
 import BaseGUI from './base-gui';
-
-const canvas = document.querySelector('canvas.webgl');
+import { Black, CanvasDriver, Engine, Input, MasterAudio, StageScaleMode } from 'black-engine';
+import Loader from './loader';
 
 export default class BaseScene {
   constructor() {
@@ -25,6 +25,7 @@ export default class BaseScene {
     this._stats = null;
     this._physics = null;
     this._baseGUI = null;
+    this._mainScene = null;
 
     this._windowSizes = {};
     this._isAssetsLoaded = false;
@@ -33,8 +34,12 @@ export default class BaseScene {
   }
 
   createGameScene() {
-    const gameScene = this._gameScene = new Scene(this._camera);
-    this._scene.add(gameScene);
+    const data = {
+      scene: this._scene,
+      camera: this._camera,
+    };
+
+    this._mainScene = new MainScene(data);
   }
 
   afterAssetsLoaded() {
@@ -45,24 +50,18 @@ export default class BaseScene {
 
     this._stats.dom.style.visibility = 'visible';
     this._baseGUI.showAfterAssetsLoad();
+
+    this._mainScene.afterAssetsLoad();
   }
 
   _init() {
     this._initGUI();
     this._initFPSMeter();
 
-    this._initScene();
-    this._initRenderer();
-    this._initCamera();
-    this._initLights();
-    this._initPhysics();
-    this._initLoadingOverlay();
-    this._initOnResize();
+    this._initBlack();
+    this._initThreeJS();
 
-    this._initAxesHelper();
-    this._setupBackgroundColor();
     this._setupGUI();
-
     this._initUpdate();
   }
 
@@ -79,6 +78,29 @@ export default class BaseScene {
     this._stats.dom.style.visibility = 'hidden';
   }
 
+  _initBlack() {
+    const engine = new Engine('container', Loader, CanvasDriver, [Input, MasterAudio]);
+
+    engine.pauseOnBlur = false;
+    engine.pauseOnHide = false;
+    engine.start();
+
+    engine.stage.setSize(640, 960);
+    engine.stage.scaleMode = StageScaleMode.LETTERBOX;
+  }
+
+  _initThreeJS() {
+    this._initScene();
+    this._initRenderer();
+    this._initCamera();
+    this._initLights();
+    this._initPhysics();
+    this._initLoadingOverlay();
+    this._initOnResize();
+    this._initAxesHelper();
+    this._setupBackgroundColor();
+  }
+
   _initScene() {
     this._scene = new THREE.Scene();
   }
@@ -88,6 +110,8 @@ export default class BaseScene {
       width: window.innerWidth,
       height: window.innerHeight
     };
+
+    const canvas = document.querySelector('canvas.webgl');
 
     const renderer = this._renderer = new THREE.WebGLRenderer({
       canvas: canvas,
@@ -114,7 +138,9 @@ export default class BaseScene {
     camera.position.set(startPosition.x, startPosition.y, startPosition.z);
     camera.lookAt(0, 0, 0);
 
-    const controls = this._controls = new OrbitControls(this._camera, canvas);
+    const blackContainer = Black.engine.containerElement;
+
+    const controls = this._controls = new OrbitControls(this._camera, blackContainer);
     controls.enableDamping = true;
     controls.enabled = false;
   }
@@ -198,8 +224,8 @@ export default class BaseScene {
         this._physics.update(deltaTime);
         this._controls.update();
 
-        if (this._gameScene) {
-          this._gameScene.update(deltaTime);
+        if (this._mainScene) {
+          this._mainScene.update(deltaTime);
         }
 
         this._renderer.render(this._scene, this._camera);
