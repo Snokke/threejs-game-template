@@ -1,19 +1,18 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/orbitcontrols';
 import BASE_CONFIG from './base-config';
-import GUIHelper from './libs/gui-helper/gui-helper';
-import GameScene from './scene/game-scene';
+import GUIHelper from '../helpers/gui-helper/gui-helper';
+import Scene from '../scene/scene';
 import Stats from "stats.js";
-import { GUIFolders, GUIFoldersVisibility } from './libs/gui-helper/gui-helper-config';
 import TWEEN from '@tweenjs/tween.js';
 import LoadingOverlay from './loading-overlay';
 import Physics from './physics';
+import BaseGUI from './base-gui';
 
 const canvas = document.querySelector('canvas.webgl');
 
-export default class ThreeJSScene {
+export default class BaseScene {
   constructor() {
-
     this._scene = null;
     this._renderer = null;
     this._camera = null;
@@ -25,6 +24,8 @@ export default class ThreeJSScene {
     this._loadingOverlay = null;
     this._stats = null;
     this._physics = null;
+    this._baseGUI = null;
+
     this._windowSizes = {};
     this._isAssetsLoaded = false;
 
@@ -32,7 +33,7 @@ export default class ThreeJSScene {
   }
 
   createGameScene() {
-    const gameScene = this._gameScene = new GameScene(this._camera);
+    const gameScene = this._gameScene = new Scene(this._camera);
     this._scene.add(gameScene);
   }
 
@@ -43,14 +44,7 @@ export default class ThreeJSScene {
     this._loadingOverlay.hide();
 
     this._stats.dom.style.visibility = 'visible';
-    const gui = GUIHelper.getInstance().gui;
-    gui.show();
-
-    gui.controllers.forEach((controller) => {
-      if (controller._name === 'Orbit controls') {
-        controller.setValue(true);
-      }
-    });
+    this._baseGUI.showAfterAssetsLoad();
   }
 
   _init() {
@@ -73,7 +67,8 @@ export default class ThreeJSScene {
   }
 
   _initGUI() {
-    new GUIHelper();
+    const guiHelper = new GUIHelper();
+    this._baseGUI = new BaseGUI(guiHelper.gui);
   }
 
   _initFPSMeter() {
@@ -115,7 +110,8 @@ export default class ThreeJSScene {
     const camera = this._camera = new THREE.PerspectiveCamera(BASE_CONFIG.camera.fov, this._windowSizes.width / this._windowSizes.height, BASE_CONFIG.camera.near, BASE_CONFIG.camera.far);
     this._scene.add(camera);
 
-    camera.position.set(13, 6, 13);
+    const startPosition = BASE_CONFIG.camera.startPosition;
+    camera.position.set(startPosition.x, startPosition.y, startPosition.z);
     camera.lookAt(0, 0, 0);
 
     const controls = this._controls = new OrbitControls(this._camera, canvas);
@@ -173,107 +169,17 @@ export default class ThreeJSScene {
   }
 
   _setupGUI() {
-    this._setupMainGUI();
-    this._setupFolders();
-    this._setupHelpersGUI();
-    this._setupLightsGUI();
-  }
+    const data = {
+      controls: this._controls,
+      stats: this._stats,
+      physics: this._physics,
+      axesHelper: this._axesHelper,
+      ambientLight: this._ambientLight,
+      directionalLight: this._directionalLight,
+      directionalLightHelper: this._directionalLightHelper,
+    }
 
-  _setupHelpersGUI() {
-    const guiHelper = GUIHelper.getInstance();
-
-    const allHelpers = { enabled: true };
-    const allHelpersName = 'Enable all helpers';
-    const guiHelpersFolder = guiHelper.getFolder(GUIFolders.Helpers);
-    guiHelpersFolder.add(allHelpers, 'enabled')
-      .name(allHelpersName)
-      .onChange((value) => {
-        guiHelpersFolder.controllers.forEach((controller) => {
-          if (controller._name !== allHelpersName) {
-            controller.setValue(value);
-          }
-        });
-      });
-
-    this._physics.initDebuggerFuiHelper();
-
-    guiHelpersFolder.add(this._directionalLightHelper, 'visible')
-      .name('Directional light');
-
-    guiHelpersFolder.add(this._axesHelper, 'visible')
-      .name('Axes');
-
-    const fpsMeter = { visible: true };
-    guiHelpersFolder.add(fpsMeter, 'visible')
-      .name('FPS meter')
-      .onChange((value) => {
-        if (value) {
-          this._stats.dom.style.visibility = 'visible';
-        } else {
-          this._stats.dom.style.visibility = 'hidden';
-        }
-      });
-  }
-
-  _setupLightsGUI() {
-    const guiHelper = GUIHelper.getInstance();
-
-    const guiLightsFolder = guiHelper.getFolder(GUIFolders.Lights);
-    const guiAmbientFolder = guiLightsFolder.addFolder('Ambient');
-    guiAmbientFolder.close();
-    guiAmbientFolder.add(this._ambientLight, 'visible')
-      .name('Enabled');
-
-    guiAmbientFolder.addColor(this._ambientLight, 'color')
-      .name('Color');
-
-    guiAmbientFolder.add(this._ambientLight, 'intensity', 0, 10)
-      .name('Intensity');
-
-    const directionalFolder = guiLightsFolder.addFolder('Directional');
-    directionalFolder.close();
-    directionalFolder.add(this._directionalLight, 'visible')
-      .name('Enabled');
-
-    directionalFolder.addColor(this._directionalLight, 'color')
-      .name('Color');
-
-    directionalFolder.add(this._directionalLight, 'intensity', 0, 10)
-      .name('Intensity');
-
-    directionalFolder.add(this._directionalLight.position, 'x', -10, 10)
-      .name('x')
-      .onChange(() => this._directionalLightHelper.update());
-
-    directionalFolder.add(this._directionalLight.position, 'y', -10, 10)
-      .name('y')
-      .onChange(() => this._directionalLightHelper.update());
-
-    directionalFolder.add(this._directionalLight.position, 'z', -10, 10)
-      .name('z')
-      .onChange(() => this._directionalLightHelper.update());
-  }
-
-  _setupMainGUI() {
-    const { gui } = GUIHelper.getInstance();
-
-    gui.add(this._controls, 'enabled')
-      .name('Orbit controls')
-      .onChange(() => this._controls.reset());
-  }
-
-  _setupFolders() {
-    const { gui } = GUIHelper.getInstance();
-
-    const folderKeys = Object.keys(GUIFolders);
-    folderKeys.forEach((folderName) => {
-      const folder = gui.addFolder(folderName);
-      folder.close();
-
-      if (!GUIFoldersVisibility[folderName]) {
-        folder.hide();
-      }
-    });
+    this._baseGUI.setup(data);
   }
 
   _initUpdate() {

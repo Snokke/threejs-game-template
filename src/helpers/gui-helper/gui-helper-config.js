@@ -7,7 +7,7 @@ const GUIFolders = {
 const GUIFoldersVisibility = {
   [GUIFolders.Helpers]: true,
   [GUIFolders.Lights]: true,
-  [GUIFolders.Custom]: true,
+  [GUIFolders.Custom]: false,
 };
 
 export { GUIFolders, GUIFoldersVisibility };

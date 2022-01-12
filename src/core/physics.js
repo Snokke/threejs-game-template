@@ -1,14 +1,14 @@
 import * as CANNON from 'cannon-es';
 import CannonDebugger from 'cannon-es-debugger';
 import BASE_CONFIG from './base-config';
-import GUIHelper from './libs/gui-helper/gui-helper';
-import { GUIFolders } from './libs/gui-helper/gui-helper-config';
+import GUIHelper from '../helpers/gui-helper/gui-helper';
+import { GUIFolders } from '../helpers/gui-helper/gui-helper-config';
 
 export default class Physics {
   constructor(scene) {
     this._scene = scene;
-    this._objects = [];
     this._world = null;
+    this._objects = [];
     this._cannonDebugger = null;
     this._cannonDebuggerMeshes = [];
     this._cannonDebuggerEnabled = { value: true };
@@ -27,11 +27,12 @@ export default class Physics {
   addBody(body, mesh, tag) {
     body.tag = tag;
     body.mesh = mesh;
+
+    body.sleepSpeedLimit = BASE_CONFIG.physics.sleepSpeedLimit;
+    body.sleepTimeLimit = BASE_CONFIG.physics.sleepTimeLimit;
+
     this._objects.push({ body, mesh });
     this._world.addBody(body);
-
-    body.sleepSpeedLimit = 0.2;
-    body.sleepTimeLimit = 0.5;
   }
 
   removeBody(body) {
@@ -43,9 +44,8 @@ export default class Physics {
     this._objects.splice(0);
   }
 
-  initDebuggerFuiHelper() {
-    const guiHelper = GUIHelper.getInstance();
-    const guiHelpersFolder = guiHelper.getFolder(GUIFolders.Helpers);
+  initDebuggerGuiHelper() {
+    const guiHelpersFolder = GUIHelper.getFolder(GUIFolders.Helpers);
 
     guiHelpersFolder.add(this._cannonDebuggerEnabled, 'value')
       .name('Physics debugger')
@@ -93,7 +93,8 @@ export default class Physics {
   _initWorld() {
     this._world = new CANNON.World();
 
-    this._world.gravity = new CANNON.Vec3(0, -9.82, 0);
+    const gravity = BASE_CONFIG.physics.gravity;
+    this._world.gravity = new CANNON.Vec3(gravity.x, gravity.y, gravity.z);
     this._world.broadphase = new CANNON.SAPBroadphase(this._world);
     this._world.allowSleep = true;
     this._world.solver.iterations = 2;
@@ -104,7 +105,7 @@ export default class Physics {
     const defaultContactMaterial = new CANNON.ContactMaterial(
       defaultMaterial,
       defaultMaterial,
-      { friction: 0.1, restitution: 0.7 },
+      { friction: 0.2, restitution: 0.5 },
     );
 
     this._world.defaultContactMaterial = defaultContactMaterial;

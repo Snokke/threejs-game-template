@@ -1,16 +1,14 @@
 import '../html/style.css';
-import Loader from './loader';
-import ThreeJSScene from './three-js-scene';
+import Loader from './core/loader';
+import BaseScene from './core/base-scene';
 
-const threeJSScene = new ThreeJSScene();
+const baseScene = new BaseScene();
 
 document.addEventListener('onLoad', () => {
-  threeJSScene.createGameScene();
+  baseScene.createGameScene();
 
-  setTimeout(() => {
-    threeJSScene.afterAssetsLoaded();
-  }, 500);
-}, false);
+  setTimeout(() => baseScene.afterAssetsLoaded(), 500);
+});
 
 const loader = new Loader();
 loader.start();

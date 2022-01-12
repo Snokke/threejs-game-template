@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
-import Loader from '../loader';
-import Physics from '../physics';
+import Loader from '../core/loader';
+import Physics from '../core/physics';
 
-export default class GameScene extends THREE.Group {
+export default class Scene extends THREE.Group {
   constructor(camera) {
     super();
 

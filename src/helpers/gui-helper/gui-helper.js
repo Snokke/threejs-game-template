@@ -1,21 +1,11 @@
 import GUI from "lil-gui";
 
-let instance = null;
-
 export default class GUIHelper {
   constructor() {
-    if (!instance) {
-      instance = this;
-    }
-
     this.gui = new GUI();
     this.gui.hide();
 
-    return this;
-  }
-
-  static getInstance() {
-    return instance;
+    GUIHelper.instance = this;
   }
 
   getFolder(name) {
@@ -31,4 +21,14 @@ export default class GUIHelper {
 
     return null;
   }
+
+  static getGui() {
+    return GUIHelper.instance.gui;
+  }
+
+  static getFolder(name) {
+    return GUIHelper.instance.getFolder(name);
+  }
 }
+
+GUIHelper.instance = null;

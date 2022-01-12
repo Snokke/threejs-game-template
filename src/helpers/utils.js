@@ -1,5 +1,7 @@
 import * as THREE from 'three';
-import Loader from "../loader";
+import Loader from "../core/loader";
+
+const boundingBox = new THREE.Box3();
 
 export default class Utils {
   static createObject(name) {
@@ -18,5 +20,12 @@ export default class Utils {
     }
 
     return group;
+  }
+
+  static getBoundingBox(target) {
+    boundingBox.setFromObject(target);
+    const size = boundingBox.getSize(new THREE.Vector3());
+
+    return size;
   }
 }
