@@ -22,12 +22,28 @@ export default class GUIHelper {
     return null;
   }
 
+  getController(folder, name) {
+    for (let i = 0; i < folder.controllers.length; i += 1) {
+      const controller = folder.controllers[i];
+
+      if (controller._name === name) {
+        return controller;
+      }
+    }
+
+    return null;
+  }
+
   static getGui() {
     return GUIHelper.instance.gui;
   }
 
   static getFolder(name) {
     return GUIHelper.instance.getFolder(name);
+  }
+
+  static getController(folder, name) {
+    return GUIHelper.instance.getController(folder, name);
   }
 }
 

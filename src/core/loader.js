@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { AssetManager, GameObject } from 'black-engine';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import button from '../../assets/black-textures/button.png';
+import buttonGreen from '../../assets/black-textures/button-green.png';
+import buttonRed from '../../assets/black-textures/button-red.png';
 
 const textures = [
 ];
@@ -27,7 +28,8 @@ export default class Loader extends GameObject {
   }
 
   _loadBlackAssets() {
-    this._blackManager.enqueueImage('button', button);
+    this._blackManager.enqueueImage('button-green', buttonGreen);
+    this._blackManager.enqueueImage('button-red', buttonRed);
 
     this._blackManager.on('complete', this._onBlackAssetsLoaded, this);
     this._blackManager.on('progress', this._onBlackAssetsProgress, this);
@@ -112,12 +114,12 @@ export default class Loader extends GameObject {
   _loadEnvironmentMap() {
     const cubeTextureLoader = new THREE.CubeTextureLoader(this._threeJSManager);
     const environmentMap = cubeTextureLoader.load([
-      '/textures/environment_maps/px.png',
-      '/textures/environment_maps/nx.png',
-      '/textures/environment_maps/py.png',
-      '/textures/environment_maps/ny.png',
-      '/textures/environment_maps/pz.png',
-      '/textures/environment_maps/nz.png',
+      '/three-js-textures/environment_maps/px.png',
+      '/three-js-textures/environment_maps/nx.png',
+      '/three-js-textures/environment_maps/py.png',
+      '/three-js-textures/environment_maps/ny.png',
+      '/three-js-textures/environment_maps/pz.png',
+      '/three-js-textures/environment_maps/nz.png',
     ]);
 
     environmentMap.encoding = THREE.sRGBEncoding;

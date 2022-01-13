@@ -1,6 +1,6 @@
 import { Black } from "black-engine";
 import Scene2D from "./scene-2d/scene-2d";
-import Scene3D from "./scene-3d";
+import Scene3D from "./scene-3d/scene-3d";
 
 export default class MainScene {
   constructor(data) {
@@ -28,8 +28,12 @@ export default class MainScene {
   }
 
   _initSignals() {
-    this._scene2D.on('button_click', () => {
-      console.log(123);
+    this._scene2D.on('spawn_click', () => {
+      this._scene3D.createItem();
+    });
+
+    this._scene2D.on('reset_click', () => {
+      this._scene3D.resetItems();
     });
   }
 }

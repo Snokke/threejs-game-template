@@ -2,12 +2,12 @@ import * as CANNON from 'cannon-es';
 import CannonDebugger from 'cannon-es-debugger';
 import BASE_CONFIG from './base-config';
 import GUIHelper from '../helpers/gui-helper/gui-helper';
-import { GUIFolders } from '../helpers/gui-helper/gui-helper-config';
+import { GUIFolders, GUIHelpersStartState } from '../helpers/gui-helper/gui-helper-config';
 
 export default class Physics {
   constructor(scene) {
     this._scene = scene;
-    this._world = null;
+    this.world = null;
     this._objects = [];
     this._cannonDebugger = null;
     this._cannonDebuggerMeshes = [];
@@ -32,11 +32,11 @@ export default class Physics {
     body.sleepTimeLimit = BASE_CONFIG.physics.sleepTimeLimit;
 
     this._objects.push({ body, mesh });
-    this._world.addBody(body);
+    this.world.addBody(body);
   }
 
   removeBody(body) {
-    this._world.remove(body);
+    this.world.removeBody(body);
   }
 
   reset() {
@@ -51,8 +51,10 @@ export default class Physics {
       .name('Physics debugger')
       .onChange((value) => {
         if (value) {
+          GUIHelpersStartState['Physics debugger'] = true;
           this._cannonDebuggerMeshes.forEach((mesh) => mesh.visible = true);
         } else {
+          GUIHelpersStartState['Physics debugger'] = false;
           this._cannonDebuggerMeshes.forEach((mesh) => mesh.visible = false);
         }
       });
@@ -60,16 +62,20 @@ export default class Physics {
 
   _initCannonDebugger() {
     if (BASE_CONFIG.physics.enableCannonDebugger) {
-      this._cannonDebugger = CannonDebugger(this._scene, this._world, {
+      this._cannonDebugger = CannonDebugger(this._scene, this.world, {
         onInit: (body, mesh) => {
           this._cannonDebuggerMeshes.push(mesh);
+
+          if (!GUIHelpersStartState['Physics debugger']) {
+            mesh.visible = false;
+          }
         }
       });
     }
   }
 
   update(dt) {
-    this._world.step(dt, 1 / 60, 3);
+    this.world.step(dt, 1 / 60, 3);
 
     if (BASE_CONFIG.physics.enableCannonDebugger) {
       this._cannonDebugger.update();
@@ -91,13 +97,14 @@ export default class Physics {
   }
 
   _initWorld() {
-    this._world = new CANNON.World();
+    this.world = new CANNON.World();
 
     const gravity = BASE_CONFIG.physics.gravity;
-    this._world.gravity = new CANNON.Vec3(gravity.x, gravity.y, gravity.z);
-    this._world.broadphase = new CANNON.SAPBroadphase(this._world);
-    this._world.allowSleep = true;
-    this._world.solver.iterations = 2;
+    this.world.gravity = new CANNON.Vec3(gravity.x, gravity.y, gravity.z);
+    this.world.broadphase = new CANNON.SAPBroadphase(this.world);
+    this.world.broadphase.axisIndex = 1;
+    this.world.allowSleep = true;
+    this.world.solver.iterations = 2;
   }
 
   _initDefaultMaterial() {
@@ -108,7 +115,7 @@ export default class Physics {
       { friction: 0.2, restitution: 0.5 },
     );
 
-    this._world.defaultContactMaterial = defaultContactMaterial;
+    this.world.defaultContactMaterial = defaultContactMaterial;
   }
 
   static onContact(body, callBack, context) {
@@ -125,6 +132,10 @@ export default class Physics {
 
   static reset() {
     return Physics.instance.reset();
+  }
+
+  static getWorld() {
+    return Physics.instance.world;
   }
 }
 

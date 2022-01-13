@@ -1,5 +1,5 @@
 import GUIHelper from "../helpers/gui-helper/gui-helper";
-import { GUIFolders, GUIFoldersVisibility } from "../helpers/gui-helper/gui-helper-config";
+import { GUIConfig, GUIFolders, GUIFoldersVisibility, GUIHelpersStartState } from "../helpers/gui-helper/gui-helper-config";
 import BASE_CONFIG from "./base-config";
 
 export default class BaseGUI {
@@ -10,11 +10,8 @@ export default class BaseGUI {
   showAfterAssetsLoad() {
     this._gui.show();
 
-    this._gui.controllers.forEach((controller) => {
-      if (controller._name === 'Orbit controls') {
-        controller.setValue(true);
-      }
-    });
+    const orbitController = GUIHelper.getController(this._gui, 'Orbit controls');
+    orbitController.setValue(true);
   }
 
   setup(data) {
@@ -25,17 +22,35 @@ export default class BaseGUI {
     this._ambientLight = data.ambientLight;
     this._directionalLight = data.directionalLight;
     this._directionalLightHelper = data.directionalLightHelper;
+    this._shadowCameraHelper = data.shadowCameraHelper;
 
     this._setupMainGUI();
     this._setupFolders();
     this._setupHelpersGUI();
     this._setupLightsGUI();
+
+    this._setupStartValues();
   }
 
   _setupMainGUI() {
     this._gui.add(this._controls, 'enabled')
       .name('Orbit controls')
       .onChange(() => this._controls.reset());
+
+    const fpsMeter = { visible: true };
+    this._gui.add(fpsMeter, 'visible')
+      .name('FPS meter')
+      .onChange((value) => {
+        if (value) {
+          this._stats.dom.style.visibility = 'visible';
+        } else {
+          this._stats.dom.style.visibility = 'hidden';
+        }
+      });
+
+    if (!GUIConfig.openAtStart) {
+      this._gui.close();
+    }
   }
 
   _setupFolders() {
@@ -55,14 +70,7 @@ export default class BaseGUI {
     const allHelpersName = 'Enable all helpers';
     const guiHelpersFolder = GUIHelper.getFolder(GUIFolders.Helpers);
     guiHelpersFolder.add(allHelpers, 'enabled')
-      .name(allHelpersName)
-      .onChange((value) => {
-        guiHelpersFolder.controllers.forEach((controller) => {
-          if (controller._name !== allHelpersName) {
-            controller.setValue(value);
-          }
-        });
-      });
+      .name(allHelpersName);
 
     if (BASE_CONFIG.physics.enableCannonDebugger) {
       this._physics.initDebuggerGuiHelper();
@@ -71,19 +79,11 @@ export default class BaseGUI {
     guiHelpersFolder.add(this._directionalLightHelper, 'visible')
       .name('Directional light');
 
+    guiHelpersFolder.add(this._shadowCameraHelper, 'visible')
+      .name('Shadow camera');
+
     guiHelpersFolder.add(this._axesHelper, 'visible')
       .name('Axes');
-
-    const fpsMeter = { visible: true };
-    guiHelpersFolder.add(fpsMeter, 'visible')
-      .name('FPS meter')
-      .onChange((value) => {
-        if (value) {
-          this._stats.dom.style.visibility = 'visible';
-        } else {
-          this._stats.dom.style.visibility = 'hidden';
-        }
-      });
   }
 
   _setupLightsGUI() {
@@ -121,5 +121,28 @@ export default class BaseGUI {
     directionalFolder.add(this._directionalLight.position, 'z', -10, 10)
       .name('z')
       .onChange(() => this._directionalLightHelper.update());
+  }
+
+  _setupStartValues() {
+    const guiHelpersFolder = GUIHelper.getFolder(GUIFolders.Helpers);
+    const GUIHelpersStartStateKeys = Object.keys(GUIHelpersStartState);
+
+    for (let i = 0; i < GUIHelpersStartStateKeys.length; i += 1) {
+      const key = GUIHelpersStartStateKeys[i];
+      const controller = GUIHelper.getController(guiHelpersFolder, key);
+      const value = GUIHelpersStartState[key];
+      controller.setValue(value);
+    }
+
+    const allHelpersName = 'Enable all helpers';
+    const allHelpersNameController = GUIHelper.getController(guiHelpersFolder, allHelpersName);
+    allHelpersNameController
+      .onChange((value) => {
+        guiHelpersFolder.controllers.forEach((controller) => {
+          if (controller._name !== allHelpersName) {
+            controller.setValue(value);
+          }
+        });
+      });
   }
 }

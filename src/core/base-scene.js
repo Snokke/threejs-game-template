@@ -10,6 +10,7 @@ import Physics from './physics';
 import BaseGUI from './base-gui';
 import { Black, CanvasDriver, Engine, Input, MasterAudio, StageScaleMode } from 'black-engine';
 import Loader from './loader';
+import { GUIFolders } from '../helpers/gui-helper/gui-helper-config';
 
 export default class BaseScene {
   constructor() {
@@ -20,6 +21,7 @@ export default class BaseScene {
     this._ambientLight = null;
     this._directionalLight = null;
     this._directionalLightHelper = null;
+    this._shadowCameraHelper = null;
     this._axesHelper = null;
     this._loadingOverlay = null;
     this._stats = null;
@@ -156,11 +158,18 @@ export default class BaseScene {
     this._scene.add(directionalLight);
 
     directionalLight.castShadow = true;
-    directionalLight.shadow.camera.far = 15;
+    directionalLight.shadow.camera.left = -10;
+    directionalLight.shadow.camera.right = 10;
+    directionalLight.shadow.camera.top = 9;
+    directionalLight.shadow.camera.bottom = -9;
+    directionalLight.shadow.camera.far = 18;
     directionalLight.shadow.mapSize.set(1024, 1024);
 
     const directionalLightHelper = this._directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 1);
     this._scene.add(directionalLightHelper);
+
+    const shadowCameraHelper = this._shadowCameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
+    this._scene.add(shadowCameraHelper);
   }
 
   _initPhysics() {
@@ -203,6 +212,7 @@ export default class BaseScene {
       ambientLight: this._ambientLight,
       directionalLight: this._directionalLight,
       directionalLightHelper: this._directionalLightHelper,
+      shadowCameraHelper: this._shadowCameraHelper,
     }
 
     this._baseGUI.setup(data);

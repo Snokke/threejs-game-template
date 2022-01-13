@@ -1,13 +1,23 @@
 const GUIFolders = {
   'Helpers': 'Helpers',
   'Lights': 'Lights',
-  'Custom': 'Custom',
 };
 
 const GUIFoldersVisibility = {
   [GUIFolders.Helpers]: true,
   [GUIFolders.Lights]: true,
-  [GUIFolders.Custom]: false,
 };
 
-export { GUIFolders, GUIFoldersVisibility };
+const GUIHelpersStartState = {
+  'Enable all helpers': false,
+  'Physics debugger': false,
+  'Directional light': false,
+  'Shadow camera': false,
+  'Axes': false,
+};
+
+const GUIConfig = {
+  openAtStart: false,
+}
+
+export { GUIFolders, GUIFoldersVisibility, GUIHelpersStartState, GUIConfig };

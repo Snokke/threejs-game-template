@@ -1,9 +1,11 @@
 import { DisplayObject, Ease, FontAlign, Sprite, TextField, Tween } from "black-engine";
 
 export default class Button extends DisplayObject {
-  constructor() {
+  constructor(name, frameName) {
     super();
 
+    this._name = name;
+    this._frameName = frameName;
     this._view = null;
 
     this.touchable = true;
@@ -30,17 +32,17 @@ export default class Button extends DisplayObject {
   }
 
   _initView() {
-    const view = this._view = new Sprite('button');
-    this.addChild(view);
+    const view = this._view = new Sprite(this._frameName);
+    this.add(view);
 
     view.alignAnchor(0.5, 0.5);
 
     view.touchable = true;
-    view.on('pointerDown', (msg, p) => this._onClick());
+    view.on('pointerDown', () => this._onClick());
   }
 
   _initText() {
-    const buttonText = new TextField('Button', 'Arial', 0xffffff, 50);
+    const buttonText = new TextField(this._name, 'Arial', 0x000000, 40);
     buttonText.align = FontAlign.CENTER;
     buttonText.alignPivotOffset();
     this.add(buttonText);
