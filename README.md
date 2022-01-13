@@ -1,5 +1,7 @@
 # Three.js game template
 
+[Live demo](https://threejs-game-template.netlify.app/)
+
 ## Setup
 Download [Node.js](https://nodejs.org/en/download/).
 Run this followed commands:
@@ -22,6 +24,5 @@ Template consists of:
 - lil-gui
 - Tween
 - Black
-
 
 [Demo with helmet](https://three-js-game-template-helmet.netlify.app/)
