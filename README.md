@@ -24,5 +24,6 @@ Template consists of:
 - lil-gui
 - Tween
 - Black
+- Loader
 
 [Demo with helmet](https://three-js-game-template-helmet.netlify.app/)
